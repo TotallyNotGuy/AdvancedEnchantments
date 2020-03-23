@@ -41,6 +41,7 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
 
     private static ItemData getItemData(ItemStack item) {
         ItemMeta meta = getMeta(item);
+
         if (meta == null) {
             return new ItemData();
         }
@@ -295,6 +296,7 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
     }
 
     public void rewriteEnchantMeta() {
+
         if (ConfigUtil.getDebugOrFalse()) {
             logger.info("Rewriting enchant meta for " + item.getType());
         }
@@ -458,6 +460,7 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
 
         meta.setLore(lore);
         item.setItemMeta(meta);
+        item.getType();
         //}
     }
 

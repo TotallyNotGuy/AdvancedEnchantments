@@ -44,7 +44,7 @@ public class SetCommand implements Runnable {
             issuer.sendError(Message.SET__ERROR_LEVEL_MIN, "{level}", String.valueOf(en.get().getMinLevel()));
             return;
         }
-        if (l > en.get().getMaxLevel()) {
+        if (!f && l > en.get().getMaxLevel()) { //force string overrides enchant limit
             issuer.sendError(Message.SET__ERROR_LEVEL_MAX, "{level}", String.valueOf(en.get().getMaxLevel()));
             return;
         }

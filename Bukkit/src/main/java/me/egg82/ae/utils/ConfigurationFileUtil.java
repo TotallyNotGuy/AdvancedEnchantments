@@ -35,6 +35,8 @@ public class ConfigurationFileUtil {
         }
 
         boolean debug = config.getNode("debug").getBoolean(false);
+        boolean reWeight = config.getNode("enable-weight").getBoolean(false);
+        boolean noPreview = config.getNode("no-preview").getBoolean(false);
 
         if (!debug) {
             Reflections.log = null;
@@ -56,11 +58,22 @@ public class ConfigurationFileUtil {
         double enchantChance = config.getNode("enchant-chance").getDouble(0.0d);
         enchantChance = Math.max(0.0d, Math.min(1.0d, enchantChance)); // Clamp value
 
+        double curseChance = config.getNode("curse-chance").getDouble(0.0d);
+        curseChance = Math.max(0.0d, Math.min(1.0d, curseChance)); // Clamp value
+
         if (debug) {
             if (enchantChance > 0.0d) {
                 logger.info(LogUtil.getHeading() + ChatColor.GREEN + "Adding custom enchants to vanilla enchanting mechanics with a " + format.format(enchantChance * 100.0d) + "% chance.");
             } else {
                 logger.info(LogUtil.getHeading() + ChatColor.YELLOW + "Skipping vanilla enchanting mechanics for custom enchants.");
+            }
+        }
+
+        if (debug) {
+            if (curseChance > 0.0d) {
+                logger.info(LogUtil.getHeading() + ChatColor.DARK_GREEN + "Adding curse mechanics to custom enchanting with a " + format.format(curseChance * 100.0d) + "% chance.");
+            } else {
+                logger.info(LogUtil.getHeading() + ChatColor.YELLOW + "Skipping adding curses when making custom enchants.");
             }
         }
 
@@ -110,6 +123,9 @@ public class ConfigurationFileUtil {
                 .particles(particles)
                 .lootEnchantChance(lootEnchantChance)
                 .lootCurseChance(lootCurseChance)
+                .reWeight(reWeight)
+                .noPreview(noPreview)
+                .curseChance(curseChance)
                 .build();
 
         ConfigUtil.setConfiguration(config, cachedValues);

@@ -8,5 +8,6 @@ public class AntigravityEnchantment extends AdvancedEnchantment {
     public AntigravityEnchantment() {
         super(UUID.randomUUID(), "antigravity", "Antigravity", false, 1, 3);
         targets.add(AdvancedEnchantmentTarget.ARMOR_FEET);
+        conflicts.add(AdvancedEnchantment.ACCELERATION);
     }
 }

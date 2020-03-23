@@ -8,5 +8,6 @@ public class BlindingEnchantment extends AdvancedEnchantment {
     public BlindingEnchantment() {
         super(UUID.randomUUID(), "blinding", "Blinding", false, 1, 5);
         targets.add(AdvancedEnchantmentTarget.WEAPON);
+        conflicts.add(AdvancedEnchantment.POISONOUS);
     }
 }

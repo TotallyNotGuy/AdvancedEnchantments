@@ -86,7 +86,7 @@ public class VampiricEvents extends EventHolder {
 
         double health = to.getHealth();
         double damage = event.getFinalDamage();
-        health += damage - (damage / (level + 0.3333333333333334d));
+        health += damage - (damage / (level/3 + 0.3333333333333334d)); //nerf vampiric
         to.setHealth(Math.min(to.getMaxHealth(), health));
     }
 }

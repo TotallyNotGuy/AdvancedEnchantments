@@ -2,6 +2,7 @@ package me.egg82.ae.events;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import me.egg82.ae.api.AdvancedEnchantment;
 import me.egg82.ae.api.BukkitEnchantableItem;
@@ -22,9 +23,9 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.inventory.*;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.*;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.inventory.EnchantingInventory;
 
 public class EnchantingTableEvents extends EventHolder {
     private final Plugin plugin;
@@ -60,7 +61,7 @@ public class EnchantingTableEvents extends EventHolder {
         events.add(
                 BukkitEvents.subscribe(plugin, EnchantItemEvent.class, EventPriority.NORMAL)
                         .filter(BukkitEventFilters.ignoreCancelled())
-                        .filter(e -> e.getItem().getType() != enchantedBookMaterial) // TODO: Make books work
+                        .filter(e -> e.getItem().getType() != enchantedBookMaterial)
                         .handler(this::addEnchants)
         );
 
@@ -131,26 +132,39 @@ public class EnchantingTableEvents extends EventHolder {
     }
 
     private void setWindow(InventoryEvent event) {
-        if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Removing enchanting table visual data from window.");
+        if (ConfigUtil.getNoPreviewOrFalse()) {
+            if (ConfigUtil.getDebugOrFalse()) {
+                logger.info("Removing enchanting table visual data from window.");
+            }
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (!event.getView().setProperty(InventoryView.Property.ENCHANT_ID1, -1)) {
+                    logger.warn("Could not set ENCHANT_ID1 to none.");
+                }
+                if (!event.getView().setProperty(InventoryView.Property.ENCHANT_ID2, -1)) {
+                    logger.warn("Could not set ENCHANT_ID2 to none.");
+                }
+                if (!event.getView().setProperty(InventoryView.Property.ENCHANT_ID3, -1)) {
+                    logger.warn("Could not set ENCHANT_ID3 to none.");
+                }
+            }, 1L);
+        } else {
+            if (ConfigUtil.getDebugOrFalse()) {
+                logger.info("Keeping enchanting table visual data in the window.");
+            }
         }
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!event.getView().setProperty(InventoryView.Property.ENCHANT_ID1, -1)) {
-                logger.warn("Could not set ENCHANT_ID1 to none.");
-            }
-            if (!event.getView().setProperty(InventoryView.Property.ENCHANT_ID2, -1)) {
-                logger.warn("Could not set ENCHANT_ID2 to none.");
-            }
-            if (!event.getView().setProperty(InventoryView.Property.ENCHANT_ID3, -1)) {
-                logger.warn("Could not set ENCHANT_ID3 to none.");
-            }
-        }, 1L);
     }
 
     private void addEnchants(EnchantItemEvent event) {
         Optional<CachedConfigValues> cachedConfig = ConfigUtil.getCachedConfig();
         if (!cachedConfig.isPresent() || cachedConfig.get().getEnchantChance() == 0.0d) {
             return;
+        }
+        EnchantingInventory eInv = (EnchantingInventory) event.getInventory();
+        ItemStack i = eInv.getItem();
+        //Book fix
+        if (Objects.requireNonNull(eInv.getItem()).getType().toString().equals("BOOK")) {
+            logger.info("this is a " + eInv.getItem().getType() + " but it shall now be enchanted book");
+            i.setType(Material.ENCHANTED_BOOK);
         }
 
         Map<GenericEnchantment, Integer> currentEnchants = getEnchants(event.getEnchantsToAdd());
@@ -164,12 +178,20 @@ public class EnchantingTableEvents extends EventHolder {
                 if (ConfigUtil.getDebugOrFalse()) {
                     logger.info("[Enchanting Table] Trying to replace vanilla enchant " + kvp.getKey().getName() + " with custom enchant on " + event.getItem());
                 }
+                boolean doCurse = false;
+                if (Math.random() < cachedConfig.get().getCurseChance()) { //tries to add a curse
+                    doCurse = true;
+                }
 
                 int tries = 0;
                 AdvancedEnchantment newEnchant;
                 do {
                     // Get a new random (custom) enchant to replace the vanilla one
-                    newEnchant = EnchantmentUtil.getNextEnchant();
+                    if (doCurse) {
+                        newEnchant = EnchantmentUtil.getNextCurse();
+                    } else {
+                        newEnchant = EnchantmentUtil.getNextEnchant();
+                    }
                     tries++;
 
                     if (
@@ -206,14 +228,13 @@ public class EnchantingTableEvents extends EventHolder {
 
         // Edge-case, if empty no exp is taken by Bukkit so we have to do it ourselves
         if (event.getEnchantsToAdd().isEmpty()) {
-            int newLevel = event.getEnchanter().getLevel() - event.getExpLevelCost();
+            int newLevel = event.getEnchanter().getLevel() - event.whichButton() - 1; //getExpLevel() sometimes returns 30 instead of 3, so using button pressed (0-2) - 1 should work instead
             if (newLevel < 0) {
                 newLevel = 0;
             }
             event.getEnchanter().setLevel(newLevel);
             event.getEnchanter().playSound(event.getEnchanter().getLocation(), enchantSound, 1.0f, 1.0f);
         }
-
         // Add all the new (custom) enchants
         item.setEnchantmentLevels(newEnchants);
 

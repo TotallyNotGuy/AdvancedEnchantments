@@ -8,5 +8,6 @@ public class RepairingEnchantment extends AdvancedEnchantment {
     public RepairingEnchantment() {
         super(UUID.randomUUID(), "repairing", "Repairing", false, 1, 3);
         targets.add(AdvancedEnchantmentTarget.BREAKABLE);
+        conflicts.add(AdvancedEnchantment.SOULBOUND);
     }
 }
