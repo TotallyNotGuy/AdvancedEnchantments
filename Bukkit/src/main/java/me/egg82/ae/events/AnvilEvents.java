@@ -66,15 +66,14 @@ public class AnvilEvents extends EventHolder {
         ItemStack sacrificeItem = event.getInventory().getItem(1);
 
         // TODO: Make books work
-        //removed carryoverItem.getType() == enchantedBookMaterial
         logger.info("Anvil event.getResult: " + event.getResult().getType());
-        if (carryoverItem == null || carryoverItem.getType() == Material.AIR || sacrificeItem == null || sacrificeItem.getType() == Material.AIR || event.getResult() == null || event.getResult().getType() == Material.AIR) {
+        if (carryoverItem == null || carryoverItem.getType() == enchantedBookMaterial || carryoverItem.getType() == Material.AIR || sacrificeItem == null || sacrificeItem.getType() == Material.AIR || event.getResult() == null || event.getResult().getType() == Material.AIR) {
             return;
         }
 
         BukkitEnchantableItem enchantableCarryoverItem = BukkitEnchantableItem.fromItemStack(carryoverItem.clone()); // Use a clone, not the real item
 
-        /*if (sacrificeItem.getType() == enchantedBookMaterial) {
+        if (sacrificeItem.getType() == enchantedBookMaterial) {
             if (!sacrificeItem.hasItemMeta()) {
                 logger.info("Enchanted book has no MetaData, cancelling");
                 return;
@@ -86,7 +85,7 @@ public class AnvilEvents extends EventHolder {
             }
 
             applyEnchants(toGenericEnchants(meta.getStoredEnchants()), enchantableCarryoverItem);
-        } else {*/
+        } else {
             if (!sacrificeItem.hasItemMeta()) {
                 return;
             }
@@ -97,7 +96,7 @@ public class AnvilEvents extends EventHolder {
 
             BukkitEnchantableItem enchantableSacrificeItem = BukkitEnchantableItem.fromItemStack(sacrificeItem);
             applyEnchants(enchantableSacrificeItem.getEnchantments(), enchantableCarryoverItem);
-        //}
+        }
 
         event.setResult((ItemStack) enchantableCarryoverItem.getConcrete());
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
