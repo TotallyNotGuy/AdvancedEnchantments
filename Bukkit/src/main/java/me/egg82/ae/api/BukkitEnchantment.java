@@ -1,7 +1,5 @@
 package me.egg82.ae.api;
 
-import java.awt.*;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +35,10 @@ public class BukkitEnchantment extends GenericEnchantment {
 
     static {
         if (PROTECTION != null) {
-            ACCELERATION. conflicts.addAll(Arrays.asList(PROTECTION,PROTECTION_EXPLOSIONS,PROTECTION_FIRE,PROTECTION_PROJECTILE));
+            ACCELERATION.conflicts.add(PROTECTION);
+            ACCELERATION.conflicts.add(PROTECTION_EXPLOSIONS);
+            ACCELERATION.conflicts.add(PROTECTION_FIRE);
+            ACCELERATION.conflicts.add(PROTECTION_PROJECTILE);
         }
     }
 
