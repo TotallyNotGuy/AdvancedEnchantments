@@ -162,7 +162,7 @@ public class EnchantingTableEvents extends EventHolder {
         EnchantingInventory eInv = (EnchantingInventory) event.getInventory();
         ItemStack i = eInv.getItem();
         //Book fix
-        if (Objects.requireNonNull(eInv.getItem()).getType().toString().equals("BOOK")) {
+        if (Objects.requireNonNull(eInv.getItem()).getType() == Material.ENCHANTED_BOOK) {
             logger.info("this is a " + eInv.getItem().getType() + " but it shall now be enchanted book");
             i.setType(Material.ENCHANTED_BOOK);
         }
@@ -239,6 +239,9 @@ public class EnchantingTableEvents extends EventHolder {
         item.setEnchantmentLevels(newEnchants);
 
         if (rewritten) {
+            if (Objects.requireNonNull(eInv.getItem()).getType() == Material.ENCHANTED_BOOK) {
+                Bukkit.getScheduler().runTaskLater(plugin, item::rewriteStrEnchantMeta, 1L);
+            }
             Bukkit.getScheduler().runTaskLater(plugin, item::rewriteEnchantMeta, 1L);
         }
     }

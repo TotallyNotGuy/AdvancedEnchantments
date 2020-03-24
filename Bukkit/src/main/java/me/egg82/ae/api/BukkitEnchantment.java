@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import me.egg82.ae.utils.ConfigUtil;
 import me.egg82.ae.utils.EnchantmentUtil;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.slf4j.Logger;
@@ -23,6 +25,7 @@ public class BukkitEnchantment extends GenericEnchantment {
 
     public static BukkitEnchantment fromEnchant(Enchantment enchant) {
         if (enchant == null) {
+            Bukkit.broadcastMessage(ChatColor.RED + "You just tried to log an invalid enchant, boi");
             return null;
         }
 
