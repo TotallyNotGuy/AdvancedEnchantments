@@ -147,10 +147,6 @@ public class EnchantingTableEvents extends EventHolder {
                     logger.warn("Could not set ENCHANT_ID3 to none.");
                 }
             }, 1L);
-        } else {
-            if (ConfigUtil.getDebugOrFalse()) {
-                logger.info("Keeping enchanting table visual data in the window.");
-            }
         }
     }
 
@@ -159,12 +155,17 @@ public class EnchantingTableEvents extends EventHolder {
         if (!cachedConfig.isPresent() || cachedConfig.get().getEnchantChance() == 0.0d) {
             return;
         }
+
         EnchantingInventory eInv = (EnchantingInventory) event.getInventory();
-        ItemStack i = eInv.getItem();
+        //ItemStack i = eInv.getItem();
         //Book fix
-        if (Objects.requireNonNull(eInv.getItem()).getType().toString().equals("BOOK")) {
-            logger.info("this is a " + eInv.getItem().getType() + " but it shall now be enchanted book");
-            i.setType(Material.ENCHANTED_BOOK);
+        if (Objects.requireNonNull(eInv.getItem()).getType() == Material.BOOK) {
+             if (ConfigUtil.getDebugOrFalse()) {
+                 logger.info("Enchanted book detected");
+                 //logger.info("this is a " + eInv.getItem().getType() + " but it shall now be enchanted book");
+             }
+             return;
+             //i.setType(Material.ENCHANTED_BOOK);
         }
 
         Map<GenericEnchantment, Integer> currentEnchants = getEnchants(event.getEnchantsToAdd());
