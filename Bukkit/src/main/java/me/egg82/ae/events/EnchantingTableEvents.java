@@ -155,17 +155,11 @@ public class EnchantingTableEvents extends EventHolder {
         if (!cachedConfig.isPresent() || cachedConfig.get().getEnchantChance() == 0.0d) {
             return;
         }
-
         EnchantingInventory eInv = (EnchantingInventory) event.getInventory();
-        //ItemStack i = eInv.getItem();
+        ItemStack i = eInv.getItem();
         //Book fix
         if (Objects.requireNonNull(eInv.getItem()).getType() == Material.BOOK) {
-             if (ConfigUtil.getDebugOrFalse()) {
-                 logger.info("Enchanted book detected");
-                 //logger.info("this is a " + eInv.getItem().getType() + " but it shall now be enchanted book");
-             }
-             return;
-             //i.setType(Material.ENCHANTED_BOOK);
+            i.setType(Material.ENCHANTED_BOOK);
         }
 
         Map<GenericEnchantment, Integer> currentEnchants = getEnchants(event.getEnchantsToAdd());
@@ -250,7 +244,11 @@ public class EnchantingTableEvents extends EventHolder {
         item.setEnchantmentLevels(newEnchants);
 
         if (rewritten) {
-            Bukkit.getScheduler().runTaskLater(plugin, item::rewriteEnchantMeta, 1L);
+            if (Objects.requireNonNull(eInv.getItem()).getType() == Material.ENCHANTED_BOOK) {
+                Bukkit.getScheduler().runTaskLater(plugin, item::rewriteStrEnchantMeta, 1L);
+            } else {
+                Bukkit.getScheduler().runTaskLater(plugin, item::rewriteEnchantMeta, 1L);
+            }
         }
     }
 

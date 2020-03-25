@@ -16,6 +16,7 @@ import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,10 +61,14 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
 
         this.item = item;
         targets.addAll(targetCache.get(item.getType()));
-        enchantments.putAll(getBukkitEnchantments(item));
         enchantments.putAll(getAdvancedEnchantments(item));
+        if(item.getType() == Material.ENCHANTED_BOOK){
+            enchantments.putAll(getStoredEnchantments(item));
+        } else {
+            enchantments.putAll(getBukkitEnchantments(item));
+            souls = getNumSouls(item);
+        }
         // TODO: Enforce conflicts (with vanilla enchants as well - except durability 0), accounting for forced enchants (somehow)
-        souls = getNumSouls(item);
     }
 
     private BukkitEnchantableItem(ItemStack item, Set<GenericEnchantmentTarget> targets, Map<GenericEnchantment, Integer> enchantments, int souls) {
@@ -102,6 +107,18 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
         for (Map.Entry<Enchantment, Integer> kvp : item.getEnchantments().entrySet()) {
             if (ConfigUtil.getDebugOrFalse()) {
                 logger.info("Found Bukkit enchant for " + item.getType() + ": " + EnchantmentUtil.getName(kvp.getKey()) + " " + getNumerals(kvp.getValue()));
+            }
+            retVal.put(BukkitEnchantment.fromEnchant(kvp.getKey()), kvp.getValue());
+        }
+        return retVal;
+    }
+
+    private static Map<GenericEnchantment, Integer> getStoredEnchantments(ItemStack item) {
+        Map<GenericEnchantment, Integer> retVal = new HashMap<>();
+        EnchantmentStorageMeta eSmeta = (EnchantmentStorageMeta) item.getItemMeta();
+        for (Map.Entry<Enchantment, Integer> kvp : eSmeta.getStoredEnchants().entrySet()) {
+            if (ConfigUtil.getDebugOrFalse()) {
+                logger.info("Found Stored enchant for " + item.getType() + ": " + EnchantmentUtil.getName(kvp.getKey()) + " " + getNumerals(kvp.getValue()));
             }
             retVal.put(BukkitEnchantment.fromEnchant(kvp.getKey()), kvp.getValue());
         }
@@ -324,6 +341,66 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
 
         if (ConfigUtil.getDebugOrFalse()) {
             logger.info("Rebuilding enchant meta for " + item.getType());
+        }
+
+        // Re-build enchant lists, souls, and lore
+        Set<BukkitEnchantment> bukkitEnchants = new HashSet<>();
+        Set<GenericEnchantment> otherEnchants = new HashSet<>();
+
+        for (Map.Entry<GenericEnchantment, Integer> kvp : enchantments.entrySet()) {
+            if (kvp.getKey() instanceof BukkitEnchantment) {
+                if (ConfigUtil.getDebugOrFalse()) {
+                    logger.info("Setting Bukkit enchant for " + item.getType() + ": " + kvp.getKey().getName() + " " + getNumerals(kvp.getValue()));
+                }
+                bukkitEnchants.add((BukkitEnchantment) kvp.getKey());
+                meta.addEnchant((Enchantment) kvp.getKey().getConcrete(), kvp.getValue(), true);
+            } else {
+                if (ConfigUtil.getDebugOrFalse()) {
+                    logger.info("Setting AE enchant for " + item.getType() + ": " + kvp.getKey().getName() + " " + getNumerals(kvp.getValue()));
+                }
+                otherEnchants.add(kvp.getKey());
+                // Only add AE enchants to lore
+                lore.add((kvp.getKey().isCurse() ? ChatColor.RED : ChatColor.GRAY) + kvp.getKey().getFriendlyName() + " " + getNumerals(kvp.getValue()));
+            }
+        }
+
+        if (souls > 0) {
+            lore.add(ChatColor.GRAY + "Souls: " + getNumerals(souls));
+        }
+
+        setShinyMeta(meta, lore, bukkitEnchants, otherEnchants);
+
+        forceCache(item, this);
+    }
+
+    public void rewriteStrEnchantMeta() {
+
+        if (ConfigUtil.getDebugOrFalse()) {
+            logger.info("Rewriting stored enchant meta for " + item.getType());
+        }
+
+        ItemMeta meta = getMeta(item);
+        if (meta == null) {
+            return;
+        }
+
+        EnchantmentStorageMeta eSMeta = (EnchantmentStorageMeta) meta;
+        logger.info("Creating EnchantmentStorageMeta for this book");
+
+        if (ConfigUtil.getDebugOrFalse()) {
+            logger.info("Resetting stored enchant meta for " + item.getType());
+        }
+
+        List<String> lore = !meta.hasLore() ? new ArrayList<>() : stripEnchantsAndSouls(meta.getLore()); // Remove all custom enchants from lore, we'll put them back later
+        // Remove any Bukkit enchants that don't exist on the item any more
+        for (Map.Entry<Enchantment, Integer> kvp : item.getEnchantments().entrySet()) {
+            if (!enchantments.containsKey(BukkitEnchantment.fromEnchant(kvp.getKey()))) {
+                eSMeta.removeStoredEnchant(kvp.getKey());
+            }
+        }
+
+        if (ConfigUtil.getDebugOrFalse()) {
+            logger.info("Rebuilding stored enchant meta for " + item.getType());
         }
 
         // Re-build enchant lists, souls, and lore
