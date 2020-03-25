@@ -34,7 +34,7 @@ public class VampiricEvents extends EventHolder {
         events.add(
                 BukkitEvents.subscribe(plugin, EntityDamageByEntityEvent.class, EventPriority.NORMAL)
                         .filter(BukkitEventFilters.ignoreCancelled())
-                        .filter(this::compatIgnoreCancelled)
+                        .filter(this::townyIgnoreCancelled)
                         .filter(e -> e.getDamager() instanceof LivingEntity)
                         .filter(e -> PermissionUtil.canUseEnchant(e.getDamager(), "ae.enchant.vampiric"))
                         .handler(this::damage)
@@ -85,7 +85,7 @@ public class VampiricEvents extends EventHolder {
         }
 
         double health = to.getHealth();
-        double damage = Math.max(7.0d, event.getFinalDamage()) / 4.0d;
+        double damage = event.getFinalDamage();
         health += damage - (damage / (level + 0.3333333333333334d));
         to.setHealth(Math.min(to.getMaxHealth(), health));
     }

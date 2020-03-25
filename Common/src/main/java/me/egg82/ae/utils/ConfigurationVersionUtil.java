@@ -25,6 +25,9 @@ public class ConfigurationVersionUtil {
         if (config.getNode("version").getDouble() == 1.2d) {
             to13(config);
         }
+        if (config.getNode("version").getDouble() == 1.3d) {
+            toH1(config);
+        }
 
         if (config.getNode("version").getDouble() != oldVersion) {
             File backupFile = new File(fileOnDisk.getParent(), fileOnDisk.getName() + ".bak");
@@ -66,5 +69,19 @@ public class ConfigurationVersionUtil {
 
         // Version
         config.getNode("version").setValue(1.3d);
+    }
+
+    private static void toH1(ConfigurationNode config) {
+        // Add curse chance
+        config.getNode("curse-chance").setValue(.03d);
+
+        // Add weighting control
+        config.getNode("enable-weight").setValue(Boolean.TRUE);
+
+        // Add preview control
+        config.getNode("no-preview").setValue(Boolean.TRUE);
+
+        // Version
+        config.getNode("version").setValue(11.0d);
     }
 }

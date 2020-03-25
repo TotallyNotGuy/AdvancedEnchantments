@@ -32,6 +32,16 @@ public class ConfigUtil {
         return cachedConfig.isPresent() && cachedConfig.get().getDebug();
     }
 
+    public static boolean getReWeightOrFalse() {
+        Optional<CachedConfigValues> cachedConfig = getCachedConfig();
+        return cachedConfig.isPresent() && cachedConfig.get().getReWeight();
+    }
+
+    public static boolean getNoPreviewOrFalse() {
+        Optional<CachedConfigValues> cachedConfig = getCachedConfig();
+        return cachedConfig.isPresent() && cachedConfig.get().getNoPreview();
+    }
+
     public static boolean getParticlesOrFalse() {
         Optional<CachedConfigValues> cachedConfig = getCachedConfig();
         return cachedConfig.isPresent() && cachedConfig.get().getParticles();

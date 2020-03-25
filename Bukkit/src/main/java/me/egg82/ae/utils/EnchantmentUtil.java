@@ -74,9 +74,11 @@ public class EnchantmentUtil {
         }
 
         // Increase weight (decrease chance) of selected item
-        highestEnchantWeight = Math.max(highestEnchantWeight, key + 2.0d); // +2 to keep the highest +1 above the max, for a floored random
-        customEnchants.remove(key);
-        customEnchants.put(highestEnchantWeight - 1.0d, value);
+        if (ConfigUtil.getReWeightOrFalse()) { //if the config disables weighting
+            highestEnchantWeight = Math.max(highestEnchantWeight, key + 2.0d); // +2 to keep the highest +1 above the max, for a floored random
+            customEnchants.remove(key);
+            customEnchants.put(highestEnchantWeight - 1.0d, value);
+        }
         return value;
     }
 
@@ -84,7 +86,7 @@ public class EnchantmentUtil {
         double lowestWeight = customCurses.firstKey();
 
         if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Getting next curse between " + lowestWeight + " and " + highestEnchantWeight);
+            logger.info("Getting next curse between " + lowestWeight + " and " + highestCurseWeight);
         }
 
         // Select least-recently used enchant with random (weighted random)
@@ -104,9 +106,11 @@ public class EnchantmentUtil {
         }
 
         // Increase weight (decrease chance) of selected item
-        highestCurseWeight = Math.max(highestCurseWeight, key + 2.0d); // +2 to keep the highest +1 above the max, for a floored random
-        customCurses.remove(key);
-        customCurses.put(highestCurseWeight - 1.0d, value);
+        if (ConfigUtil.getReWeightOrFalse()) { //if the config disables weighting
+            highestCurseWeight = Math.max(highestCurseWeight, key + 2.0d); // +2 to keep the highest +1 above the max, for a floored random
+            customCurses.remove(key);
+            customCurses.put(highestCurseWeight - 1.0d, value);
+        }
         return value;
     }
 }

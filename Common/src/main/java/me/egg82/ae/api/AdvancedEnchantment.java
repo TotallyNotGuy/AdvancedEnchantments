@@ -16,6 +16,8 @@ public abstract class AdvancedEnchantment extends GenericEnchantment {
 
     private static final Set<AdvancedEnchantment> allEnchantments = new HashSet<>(); // Needs to be set BEFORE the enchants are defined, else NPE
 
+    public static final AdvancedEnchantment ACCELERATION = new AccelerationEnchantment(); //IDK WHAT I AM DOING
+
     public static final AdvancedEnchantment AEGIS = new AegisEnchantment();
     public static final AdvancedEnchantment AERIAL = new AerialEnchantment();
     public static final AdvancedEnchantment ANTIGRAVITY = new AntigravityEnchantment();

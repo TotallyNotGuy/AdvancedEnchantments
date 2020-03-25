@@ -23,8 +23,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AnvilEvents extends EventHolder {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Plugin plugin;
 
     private static Material enchantedBookMaterial;
@@ -63,7 +66,8 @@ public class AnvilEvents extends EventHolder {
         ItemStack sacrificeItem = event.getInventory().getItem(1);
 
         // TODO: Make books work
-        if (carryoverItem == null || carryoverItem.getType() == Material.AIR || carryoverItem.getType() == enchantedBookMaterial || sacrificeItem == null || sacrificeItem.getType() == Material.AIR || event.getResult() == null || event.getResult().getType() == Material.AIR) {
+        logger.info("Anvil event.getResult: " + event.getResult().getType());
+        if (carryoverItem == null || carryoverItem.getType() == enchantedBookMaterial || carryoverItem.getType() == Material.AIR || sacrificeItem == null || sacrificeItem.getType() == Material.AIR || event.getResult() == null || event.getResult().getType() == Material.AIR) {
             return;
         }
 
@@ -71,10 +75,12 @@ public class AnvilEvents extends EventHolder {
 
         if (sacrificeItem.getType() == enchantedBookMaterial) {
             if (!sacrificeItem.hasItemMeta()) {
+                logger.info("Enchanted book has no MetaData, cancelling");
                 return;
             }
             EnchantmentStorageMeta meta = (EnchantmentStorageMeta) sacrificeItem.getItemMeta();
             if (!meta.hasStoredEnchants()) {
+                logger.info("Enchanted book has no stored AE enchants");
                 return;
             }
 
@@ -109,14 +115,15 @@ public class AnvilEvents extends EventHolder {
 
     private void applyEnchants(Map<GenericEnchantment, Integer> enchants, BukkitEnchantableItem enchantableCarryoverItem) {
         Map<GenericEnchantment, Integer> newEnchants = new HashMap<>();
-
+        logger.info("We are trying to apply Anvil enchants now");
         // Add all enchants from sacrifice item
         for (Map.Entry<GenericEnchantment, Integer> kvp : enchants.entrySet()) {
+            /*
             if (!kvp.getKey().canEnchant(enchantableCarryoverItem)) {
                 // can't enchant carryover with this enchant, so skip it
                 continue;
             }
-
+            */
             if (enchantableCarryoverItem.hasEnchantment(kvp.getKey())) {
                 // carryover has enchant
                 if (kvp.getValue() > enchantableCarryoverItem.getEnchantmentLevel(kvp.getKey())) {

@@ -60,8 +60,8 @@ public abstract class GenericEnchantment {
 
     public boolean conflictsWith(GenericEnchantment other) {
         if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Checking if enchant " + name + " conflicts with " + (other == null ? "null" : other.name));
-            logger.info("Conflicts: " + (other != null && conflicts.contains(other)));
+            logger.info("[AE] Checking if enchant " + name + " conflicts with " + (other == null ? "null" : other.name));
+            logger.info("Gen Conflicts: " + (other != null && conflicts.contains(other)));
             return other != null && (conflicts.contains(other) || other.conflicts.contains(this));
         }
 
@@ -70,7 +70,7 @@ public abstract class GenericEnchantment {
 
     public boolean canEnchant(GenericEnchantableItem item) {
         if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Checking if enchant " + name + " is compatible with " + (item == null ? "null" : item.getConcrete()));
+            logger.info("[GEcE] Checking if enchant " + name + " is compatible with " + (item == null ? "null" : item.getConcrete()));
         }
 
         if (item == null) {
@@ -80,7 +80,17 @@ public abstract class GenericEnchantment {
             return false;
         }
 
+
         boolean good = false;
+        if (item.getConcrete().toString().equals("ItemStack{ENCHANTED_BOOK x 1}")) {
+            if (ConfigUtil.getDebugOrFalse()) {
+                logger.info("Found valid enchanted book " + item.getConcrete() + " for enchant " + name);
+            }
+            good = true;
+        } else {
+            logger.info(item.getConcrete() + " isn't an enchanted book >:(");
+        }
+
         for (GenericEnchantmentTarget target : item.getEnchantmentTargets()) {
             if (targets.contains(target)) {
                 if (ConfigUtil.getDebugOrFalse()) {

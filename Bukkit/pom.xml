@@ -9,8 +9,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>advancedenchantments-bukkit</artifactId>
-    <version>4.20.27</version>
+    <artifactId>hacky-advancedenchantments-bukkit</artifactId>
+    <version>4.20.26</version>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
@@ -363,7 +363,7 @@
         <dependency>
             <groupId>me.egg82</groupId>
             <artifactId>advancedenchantments-common</artifactId>
-            <version>4.20.27</version>
+            <version>4.20.26</version>
         </dependency>
 
         <dependency>

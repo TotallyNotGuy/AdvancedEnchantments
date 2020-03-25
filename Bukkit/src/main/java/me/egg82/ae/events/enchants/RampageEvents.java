@@ -110,7 +110,6 @@ public class RampageEvents extends EventHolder {
         Integer value = CollectionProvider.getRampage().get(key);
         value = (value == null) ? 1 : value + 1;
         CollectionProvider.getRampage().put(key, value, level * 5, TimeUnit.SECONDS);
-
-        event.getEntity().getKiller().playSound(event.getEntity().getKiller().getEyeLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 1.0f);
+        event.getEntity().getKiller().playSound(event.getEntity().getKiller().getEyeLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 0.3f, (float) (0.9 + Math.random()/10));
     }
 }

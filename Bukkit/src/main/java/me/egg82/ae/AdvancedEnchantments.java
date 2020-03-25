@@ -116,7 +116,7 @@ public class AdvancedEnchantments {
                 "{events}", String.valueOf(numEvents),
                 "{tasks}", String.valueOf(tasks.size())
         );
-
+        log(Level.INFO, ChatColor.AQUA + "Running Advanced Enchantments Custom G Version");
         workPool.execute(this::checkUpdate);
     }
 
@@ -294,6 +294,7 @@ public class AdvancedEnchantments {
 
     private void loadTasks() {
         tasks.add(Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new TaskAntigravity(), 0L, 30L));
+        tasks.add(Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new TaskAcceleration(), 0L, 30L));
         tasks.add(Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new TaskBleeding(effectManager), 0L, 20L));
         tasks.add(Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new TaskCalling(), 0L, 40L));
         tasks.add(Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new TaskFreezing(), 0L, 20L));

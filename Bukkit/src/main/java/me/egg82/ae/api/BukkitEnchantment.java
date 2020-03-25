@@ -12,6 +12,9 @@ import org.bukkit.inventory.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static me.egg82.ae.api.AdvancedEnchantment.ACCELERATION;
+import static me.egg82.ae.api.AdvancedEnchantment.PROFICIENCY;
+
 public class BukkitEnchantment extends GenericEnchantment {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -26,6 +29,19 @@ public class BukkitEnchantment extends GenericEnchantment {
     }
 
     private static final BukkitEnchantment MENDING = fromEnchant(Enchantment.getByName("MENDING"));
+    private static final BukkitEnchantment PROTECTION = fromEnchant(Enchantment.getByName("PROTECTION_ENVIRONMENTAL"));
+    private static final BukkitEnchantment PROTECTION_FIRE = fromEnchant(Enchantment.getByName("PROTECTION_FIRE"));
+    private static final BukkitEnchantment PROTECTION_EXPLOSIONS = fromEnchant(Enchantment.getByName("PROTECTION_EXPLOSIONS"));
+    private static final BukkitEnchantment PROTECTION_PROJECTILE = fromEnchant(Enchantment.getByName("PROTECTION_PROJECTILE"));
+
+    static {
+        if (PROTECTION != null) {
+            ACCELERATION.conflicts.add(PROTECTION);
+            ACCELERATION.conflicts.add(PROTECTION_EXPLOSIONS);
+            ACCELERATION.conflicts.add(PROTECTION_FIRE);
+            ACCELERATION.conflicts.add(PROTECTION_PROJECTILE);
+        }
+    }
 
     static {
         if (MENDING != null) {
@@ -42,7 +58,7 @@ public class BukkitEnchantment extends GenericEnchantment {
 
     public boolean conflictsWith(GenericEnchantment other) {
         if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Checking if enchant " + name + " conflicts with " + (other == null ? "null" : other.name));
+            logger.info("[BEcW] Checking if enchant " + name + " conflicts with " + (other == null ? "null" : other.name));
         }
 
         if (other == null) {
@@ -67,7 +83,7 @@ public class BukkitEnchantment extends GenericEnchantment {
 
     public boolean canEnchant(GenericEnchantableItem item) {
         if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Checking if enchant " + name + " is compatible with " + (item == null ? "null" : item.getConcrete()));
+            logger.info("[BEcE] Checking if enchant " + name + " is compatible with " + (item == null ? "null" : item.getConcrete()));
         }
 
         if (item == null || item.getConcrete() == null || !(item.getConcrete() instanceof ItemStack)) {

@@ -8,5 +8,6 @@ public class ChargingEnchantment extends AdvancedEnchantment {
     public ChargingEnchantment() {
         super(UUID.randomUUID(), "charging", "Charging", false, 1, 5);
         targets.add(AdvancedEnchantmentTarget.WEAPON);
+        conflicts.add(AdvancedEnchantment.AERIAL);
     }
 }
