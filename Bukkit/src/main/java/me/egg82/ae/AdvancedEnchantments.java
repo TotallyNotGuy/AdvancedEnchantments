@@ -116,7 +116,6 @@ public class AdvancedEnchantments {
                 "{events}", String.valueOf(numEvents),
                 "{tasks}", String.valueOf(tasks.size())
         );
-        log(Level.INFO, ChatColor.AQUA + "Running Advanced Enchantments Custom G Version");
         workPool.execute(this::checkUpdate);
     }
 
