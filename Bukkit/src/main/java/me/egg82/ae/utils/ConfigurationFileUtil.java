@@ -161,7 +161,7 @@ public class ConfigurationFileUtil {
         }
 
         ConfigurationLoader<ConfigurationNode> loader = YAMLConfigurationLoader.builder().setFlowStyle(DumperOptions.FlowStyle.BLOCK).setIndent(2).setFile(fileOnDisk).build();
-        ConfigurationNode root = loader.load(ConfigurationOptions.defaults().setHeader("Comments are gone because update :(. Click here for new config + comments: https://www.spigotmc.org/resources/advancedenchantments-better-enchantments-curses-api.45790/"));
+        ConfigurationNode root = loader.load(ConfigurationOptions.defaults().setHeader("Comments are gone because update :(. Snag a brand new config from here: https://github.com/TotallyNotGuy/Hacky-AdvancedEnchantments/blob/master/Common/src/main/resources/config.yml"));
         Configuration config = new Configuration(root);
         ConfigurationVersionUtil.conformVersion(loader, config, fileOnDisk);
 
