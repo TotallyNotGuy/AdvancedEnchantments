@@ -13,6 +13,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
+import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -326,6 +327,12 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
         if (meta == null) {
             return;
         }
+        boolean isBook = false;
+        EnchantmentStorageMeta eSmeta = null;
+        if (item.getType() == Material.ENCHANTED_BOOK) {
+            isBook = true;
+            eSmeta = (EnchantmentStorageMeta) item.getItemMeta(); //will crash unless on a book
+        }
 
         if (ConfigUtil.getDebugOrFalse()) {
             logger.info("Resetting enchant meta for " + item.getType());
@@ -335,7 +342,11 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
         // Remove any Bukkit enchants that don't exist on the item any more
         for (Map.Entry<Enchantment, Integer> kvp : item.getEnchantments().entrySet()) {
             if (!enchantments.containsKey(BukkitEnchantment.fromEnchant(kvp.getKey()))) {
-                meta.removeEnchant(kvp.getKey());
+                if (isBook) {
+                    eSmeta.removeStoredEnchant(kvp.getKey());
+                } else {
+                    meta.removeEnchant(kvp.getKey());
+                }
             }
         }
 
@@ -353,7 +364,11 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
                     logger.info("Setting Bukkit enchant for " + item.getType() + ": " + kvp.getKey().getName() + " " + getNumerals(kvp.getValue()));
                 }
                 bukkitEnchants.add((BukkitEnchantment) kvp.getKey());
-                meta.addEnchant((Enchantment) kvp.getKey().getConcrete(), kvp.getValue(), true);
+                if (isBook) {
+                    eSmeta.addStoredEnchant((Enchantment) kvp.getKey().getConcrete(), kvp.getValue(), true);
+                } else {
+                    meta.addEnchant((Enchantment) kvp.getKey().getConcrete(), kvp.getValue(), true);
+                }
             } else {
                 if (ConfigUtil.getDebugOrFalse()) {
                     logger.info("Setting AE enchant for " + item.getType() + ": " + kvp.getKey().getName() + " " + getNumerals(kvp.getValue()));
@@ -368,67 +383,7 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
             lore.add(ChatColor.GRAY + "Souls: " + getNumerals(souls));
         }
 
-        setShinyMeta(meta, lore, bukkitEnchants, otherEnchants);
-
-        forceCache(item, this);
-    }
-
-    public void rewriteStrEnchantMeta() {
-
-        if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Rewriting stored enchant meta for " + item.getType());
-        }
-
-        ItemMeta meta = getMeta(item);
-        if (meta == null) {
-            return;
-        }
-
-        EnchantmentStorageMeta eSMeta = (EnchantmentStorageMeta) meta;
-        logger.info("Creating EnchantmentStorageMeta for this book");
-
-        if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Resetting stored enchant meta for " + item.getType());
-        }
-
-        List<String> lore = !meta.hasLore() ? new ArrayList<>() : stripEnchantsAndSouls(meta.getLore()); // Remove all custom enchants from lore, we'll put them back later
-        // Remove any Bukkit enchants that don't exist on the item any more
-        for (Map.Entry<Enchantment, Integer> kvp : item.getEnchantments().entrySet()) {
-            if (!enchantments.containsKey(BukkitEnchantment.fromEnchant(kvp.getKey()))) {
-                eSMeta.removeStoredEnchant(kvp.getKey());
-            }
-        }
-
-        if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Rebuilding stored enchant meta for " + item.getType());
-        }
-
-        // Re-build enchant lists, souls, and lore
-        Set<BukkitEnchantment> bukkitEnchants = new HashSet<>();
-        Set<GenericEnchantment> otherEnchants = new HashSet<>();
-
-        for (Map.Entry<GenericEnchantment, Integer> kvp : enchantments.entrySet()) {
-            if (kvp.getKey() instanceof BukkitEnchantment) {
-                if (ConfigUtil.getDebugOrFalse()) {
-                    logger.info("Setting Bukkit enchant for " + item.getType() + ": " + kvp.getKey().getName() + " " + getNumerals(kvp.getValue()));
-                }
-                bukkitEnchants.add((BukkitEnchantment) kvp.getKey());
-                meta.addEnchant((Enchantment) kvp.getKey().getConcrete(), kvp.getValue(), true);
-            } else {
-                if (ConfigUtil.getDebugOrFalse()) {
-                    logger.info("Setting AE enchant for " + item.getType() + ": " + kvp.getKey().getName() + " " + getNumerals(kvp.getValue()));
-                }
-                otherEnchants.add(kvp.getKey());
-                // Only add AE enchants to lore
-                lore.add((kvp.getKey().isCurse() ? ChatColor.RED : ChatColor.GRAY) + kvp.getKey().getFriendlyName() + " " + getNumerals(kvp.getValue()));
-            }
-        }
-
-        if (souls > 0) {
-            lore.add(ChatColor.GRAY + "Souls: " + getNumerals(souls));
-        }
-
-        setShinyMeta(meta, lore, bukkitEnchants, otherEnchants);
+        setShinyMeta(meta, lore, bukkitEnchants, otherEnchants, isBook);
 
         forceCache(item, this);
     }
@@ -468,13 +423,14 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
         if (souls > 0) {
             lore.add(ChatColor.GRAY + "Souls: " + getNumerals(souls));
         }
-
-        setShinyMeta(meta, lore, bukkitEnchants, otherEnchants);
+        setShinyMeta(meta, lore, bukkitEnchants, otherEnchants, false);
 
         forceCache(item, this);
     }
 
-    private void setShinyMeta(ItemMeta meta, List<String> lore, Set<BukkitEnchantment> bukkitEnchants, Set<GenericEnchantment> otherEnchants) {
+    private void setShinyMeta(ItemMeta meta, List<String> lore, Set<BukkitEnchantment> bukkitEnchants, Set<GenericEnchantment> otherEnchants, boolean isBook) {
+
+
         if (ConfigUtil.getDebugOrFalse()) {
             logger.info("Ensuring shiny meta for " + item.getType());
         }
@@ -487,6 +443,10 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
             } else {
                 hasBukkitEnchants = true;
             }
+        }
+        EnchantmentStorageMeta eSmeta = null;
+        if (isBook) {
+            eSmeta = (EnchantmentStorageMeta) item.getItemMeta(); // will crash unless it is on a book
         }
 
         // TODO: Get ProtocolLib working?
@@ -509,6 +469,75 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
                 }
             }
         } else {*/
+        // All this does is ensure we have a "shiny" item while keeping the item as "pure" as possible
+        if (hasBukkitEnchants) {
+            if (hasHackyEnchant) {
+                enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
+                if (isBook) {
+                    eSmeta.removeStoredEnchant(Enchantment.DURABILITY);
+                } else {
+                    meta.removeEnchant(Enchantment.DURABILITY);
+                }
+                hasHackyEnchant = false;
+            }
+            meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ENCHANTS);
+        } else {
+            if ((!otherEnchants.isEmpty() || souls > 0) && !hasHackyEnchant) {
+                enchantments.put(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY), 0);
+                if (isBook) {
+                    eSmeta.addStoredEnchant(Enchantment.DURABILITY, 0, true);
+                } else {
+                    meta.addEnchant(Enchantment.DURABILITY, 0, true);
+                }
+                hasHackyEnchant = true;
+            }
+
+            if (hasHackyEnchant) {
+                if (!otherEnchants.isEmpty() || souls > 0) {
+                    if (isBook) {
+                        meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS); //needed to remove the stored enchantment previews for some reason instead of hide_enchants
+                    } else {
+                        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+                    }
+                } else {
+                    enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
+                    if (isBook) {
+                        eSmeta.removeStoredEnchant(Enchantment.DURABILITY);
+                    } else {
+                        meta.removeEnchant(Enchantment.DURABILITY);
+                    }
+                    hasHackyEnchant = false;
+                }
+            }
+        }
+
+        if (!hasHackyEnchant) {
+            meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        meta.setLore(lore);
+        item.setItemMeta(meta);
+        item.getType();
+        //}
+    }
+
+    private void setShinyBook(ItemMeta meta, List<String> lore, Set<BukkitEnchantment> bukkitEnchants, Set<GenericEnchantment> otherEnchants) {
+        if (ConfigUtil.getDebugOrFalse()) {
+            logger.info("Ensuring shiny meta for book");
+        }
+
+        boolean hasBukkitEnchants = false;
+        boolean hasHackyEnchant = false;
+        for (BukkitEnchantment bukkitEnchant : bukkitEnchants) {
+            if (bukkitEnchant.getConcrete().equals(Enchantment.DURABILITY) && enchantments.get(bukkitEnchant) == 0) {
+                hasHackyEnchant = true;
+            } else {
+                hasBukkitEnchants = true;
+            }
+        }
+
         // All this does is ensure we have a "shiny" item while keeping the item as "pure" as possible
         if (hasBukkitEnchants) {
             if (hasHackyEnchant) {

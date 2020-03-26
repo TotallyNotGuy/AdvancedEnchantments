@@ -158,7 +158,7 @@ public class EnchantingTableEvents extends EventHolder {
         EnchantingInventory eInv = (EnchantingInventory) event.getInventory();
         ItemStack i = eInv.getItem();
         //Book fix
-        if (Objects.requireNonNull(eInv.getItem()).getType() == Material.BOOK) {
+        if (i.getType() == Material.BOOK) {
             i.setType(Material.ENCHANTED_BOOK);
         }
 
@@ -229,6 +229,7 @@ public class EnchantingTableEvents extends EventHolder {
                     logger.info("[Enchanting Table] Successfully replaced vanilla enchant " + kvp.getKey().getName() + " with custom enchant " + newEnchant.getName());
                 }
             }
+
         }
 
         // Edge-case, if empty no exp is taken by Bukkit so we have to do it ourselves
@@ -241,15 +242,12 @@ public class EnchantingTableEvents extends EventHolder {
             event.getEnchanter().playSound(event.getEnchanter().getLocation(), enchantSound, 1.0f, 1.0f);
         }
         // Add all the new (custom) enchants
-        item.setEnchantmentLevels(newEnchants);
 
+        item.setEnchantmentLevels(newEnchants);
         if (rewritten) {
-            if (Objects.requireNonNull(eInv.getItem()).getType() == Material.ENCHANTED_BOOK) {
-                Bukkit.getScheduler().runTaskLater(plugin, item::rewriteStrEnchantMeta, 1L);
-            } else {
-                Bukkit.getScheduler().runTaskLater(plugin, item::rewriteEnchantMeta, 1L);
-            }
+            Bukkit.getScheduler().runTaskLater(plugin, item::rewriteEnchantMeta, 1L);
         }
+
     }
 
     private Map<GenericEnchantment, Integer> getEnchants(Map<Enchantment, Integer> original) {
