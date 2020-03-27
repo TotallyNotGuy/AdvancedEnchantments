@@ -67,7 +67,7 @@ public class AnvilEvents extends EventHolder {
 
         // TODO: Make books work
         logger.info("Anvil event.getResult: " + event.getResult().getType());
-        if (carryoverItem == null || carryoverItem.getType() == enchantedBookMaterial || carryoverItem.getType() == Material.AIR || sacrificeItem == null || sacrificeItem.getType() == Material.AIR || event.getResult() == null || event.getResult().getType() == Material.AIR) {
+        if (carryoverItem == null || carryoverItem.getType() == Material.AIR || sacrificeItem == null || sacrificeItem.getType() == Material.AIR || event.getResult() == null || event.getResult().getType() == Material.AIR) {
             return;
         }
 
@@ -75,16 +75,15 @@ public class AnvilEvents extends EventHolder {
 
         if (sacrificeItem.getType() == enchantedBookMaterial) {
             if (!sacrificeItem.hasItemMeta()) {
-                logger.info("Enchanted book has no MetaData, cancelling");
                 return;
             }
             EnchantmentStorageMeta meta = (EnchantmentStorageMeta) sacrificeItem.getItemMeta();
             if (!meta.hasStoredEnchants()) {
-                logger.info("Enchanted book has no stored AE enchants");
                 return;
             }
-
-            applyEnchants(toGenericEnchants(meta.getStoredEnchants()), enchantableCarryoverItem);
+            logger.info("Attempting to apply enchants from an enchanted book");
+            BukkitEnchantableItem enchantableSacrificeItem = BukkitEnchantableItem.fromItemStack(sacrificeItem);
+            applyEnchants(enchantableSacrificeItem.getEnchantments(), enchantableCarryoverItem);
         } else {
             if (!sacrificeItem.hasItemMeta()) {
                 return;
@@ -115,7 +114,6 @@ public class AnvilEvents extends EventHolder {
 
     private void applyEnchants(Map<GenericEnchantment, Integer> enchants, BukkitEnchantableItem enchantableCarryoverItem) {
         Map<GenericEnchantment, Integer> newEnchants = new HashMap<>();
-        logger.info("We are trying to apply Anvil enchants now");
         // Add all enchants from sacrifice item
         for (Map.Entry<GenericEnchantment, Integer> kvp : enchants.entrySet()) {
             /*

@@ -332,6 +332,9 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
         if (item.getType() == Material.ENCHANTED_BOOK) {
             isBook = true;
             eSmeta = (EnchantmentStorageMeta) item.getItemMeta(); //will crash unless on a book
+            if (ConfigUtil.getDebugOrFalse()) {
+                logger.info("Rewriting StoredEnchants instead of Enchants");
+            }
         }
 
         if (ConfigUtil.getDebugOrFalse()) {
@@ -382,7 +385,9 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
         if (souls > 0) {
             lore.add(ChatColor.GRAY + "Souls: " + getNumerals(souls));
         }
-
+        if (ConfigUtil.getDebugOrFalse()){
+            logger.info("Shiny meta: " + meta.toString() + " lore: " + lore.toString() + " bukkitEnchants: " + bukkitEnchants.toString() + " otherEnchants: " + otherEnchants.toString() + " isBook: " + isBook);
+        }
         setShinyMeta(meta, lore, bukkitEnchants, otherEnchants, isBook);
 
         forceCache(item, this);
@@ -444,11 +449,7 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
                 hasBukkitEnchants = true;
             }
         }
-        EnchantmentStorageMeta eSmeta = null;
-        if (isBook) {
-            eSmeta = (EnchantmentStorageMeta) item.getItemMeta(); // will crash unless it is on a book
-        }
-
+        EnchantmentStorageMeta eSmeta;
         // TODO: Get ProtocolLib working?
         /*if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null) {
             if (hasHackyEnchant) {
@@ -470,109 +471,74 @@ public class BukkitEnchantableItem extends GenericEnchantableItem {
             }
         } else {*/
         // All this does is ensure we have a "shiny" item while keeping the item as "pure" as possible
-        if (hasBukkitEnchants) {
-            if (hasHackyEnchant) {
-                enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
-                if (isBook) {
+        if (isBook) {
+            eSmeta = (EnchantmentStorageMeta) item.getItemMeta(); // will crash unless it is on a book
+            if (hasBukkitEnchants) {
+                if (hasHackyEnchant) {
+                    enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
                     eSmeta.removeStoredEnchant(Enchantment.DURABILITY);
-                } else {
-                    meta.removeEnchant(Enchantment.DURABILITY);
+                    hasHackyEnchant = false;
                 }
-                hasHackyEnchant = false;
-            }
-            meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ENCHANTS);
-        } else {
-            if ((!otherEnchants.isEmpty() || souls > 0) && !hasHackyEnchant) {
-                enchantments.put(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY), 0);
-                if (isBook) {
+            } else {
+                if ((!otherEnchants.isEmpty() || souls > 0) && !hasHackyEnchant) {
+                    enchantments.put(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY), 0);
                     eSmeta.addStoredEnchant(Enchantment.DURABILITY, 0, true);
-                } else {
-                    meta.addEnchant(Enchantment.DURABILITY, 0, true);
+                    hasHackyEnchant = true;
                 }
-                hasHackyEnchant = true;
+                if (hasHackyEnchant) {
+                    if (!otherEnchants.isEmpty() || souls > 0) {
+                        eSmeta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        eSmeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS); //needed to remove the stored enchantment previews for some reason instead of hide_enchants
+                    } else {
+                        enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
+                        eSmeta.removeStoredEnchant(Enchantment.DURABILITY);
+                        hasHackyEnchant = false;
+                    }
+                }
             }
 
-            if (hasHackyEnchant) {
-                if (!otherEnchants.isEmpty() || souls > 0) {
-                    if (isBook) {
-                        meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
-                        meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS); //needed to remove the stored enchantment previews for some reason instead of hide_enchants
-                    } else {
+            if (!hasHackyEnchant) {
+                meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
+                meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+            }
+
+            eSmeta.setLore(lore);
+            item.setItemMeta(eSmeta);
+        } else {
+            if (hasBukkitEnchants) {
+                if (hasHackyEnchant) {
+                    enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
+                    meta.removeEnchant(Enchantment.DURABILITY);
+                    hasHackyEnchant = false;
+                }
+                meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ENCHANTS);
+            } else {
+                if ((!otherEnchants.isEmpty() || souls > 0) && !hasHackyEnchant) {
+                    enchantments.put(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY), 0);
+                    meta.addEnchant(Enchantment.DURABILITY, 0, true);
+                    hasHackyEnchant = true;
+                }
+
+                if (hasHackyEnchant) {
+                    if (!otherEnchants.isEmpty() || souls > 0) {
                         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                         meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-                    }
-                } else {
-                    enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
-                    if (isBook) {
-                        eSmeta.removeStoredEnchant(Enchantment.DURABILITY);
                     } else {
+                        enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
                         meta.removeEnchant(Enchantment.DURABILITY);
+                        hasHackyEnchant = false;
                     }
-                    hasHackyEnchant = false;
                 }
             }
-        }
 
-        if (!hasHackyEnchant) {
-            meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
-
-        meta.setLore(lore);
-        item.setItemMeta(meta);
-        item.getType();
-        //}
-    }
-
-    private void setShinyBook(ItemMeta meta, List<String> lore, Set<BukkitEnchantment> bukkitEnchants, Set<GenericEnchantment> otherEnchants) {
-        if (ConfigUtil.getDebugOrFalse()) {
-            logger.info("Ensuring shiny meta for book");
-        }
-
-        boolean hasBukkitEnchants = false;
-        boolean hasHackyEnchant = false;
-        for (BukkitEnchantment bukkitEnchant : bukkitEnchants) {
-            if (bukkitEnchant.getConcrete().equals(Enchantment.DURABILITY) && enchantments.get(bukkitEnchant) == 0) {
-                hasHackyEnchant = true;
-            } else {
-                hasBukkitEnchants = true;
-            }
-        }
-
-        // All this does is ensure we have a "shiny" item while keeping the item as "pure" as possible
-        if (hasBukkitEnchants) {
-            if (hasHackyEnchant) {
-                enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
-                meta.removeEnchant(Enchantment.DURABILITY);
-                hasHackyEnchant = false;
-            }
-            meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ENCHANTS);
-        } else {
-            if ((!otherEnchants.isEmpty() || souls > 0) && !hasHackyEnchant) {
-                enchantments.put(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY), 0);
-                meta.addEnchant(Enchantment.DURABILITY, 0, true);
-                hasHackyEnchant = true;
+            if (!hasHackyEnchant) {
+                meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
+                meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
             }
 
-            if (hasHackyEnchant) {
-                if (!otherEnchants.isEmpty() || souls > 0) {
-                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                    meta.removeItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-                } else {
-                    enchantments.remove(BukkitEnchantment.fromEnchant(Enchantment.DURABILITY));
-                    meta.removeEnchant(Enchantment.DURABILITY);
-                    hasHackyEnchant = false;
-                }
-            }
-        }
-
-        if (!hasHackyEnchant) {
-            meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
-
-        meta.setLore(lore);
-        item.setItemMeta(meta);
-        item.getType();
-        //}
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        } //}
     }
 
     private static List<String> stripEnchantsAndSouls(List<String> lore) {
